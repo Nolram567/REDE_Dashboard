@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Karte</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css"/>
+    <link rel="icon" href="{{ base_url }}/favicon" type="image/x-icon">
+
+    <style>
+        #mapid {
+            height: calc(100vh - 60px);
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background-color: #174d88;
+            height: 95px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.16);
+        }
+
+        .header img {
+            margin-left: 10px;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-around;
+            flex-grow: 1;
+            padding: 0 20px;
+            align-items: center;
+        }
+
+        .nav-container a {
+            background-color: #f8f9fa;
+            text-decoration: none;
+            color: black;
+            font-size: 20px;
+            padding: 10px 20px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            transition: 0.3s;
+            align-items: center
+        }
+
+        .nav-container a:hover {
+            color: #fff;
+            background-color: #333;
+        }
+
+        .awesomplete {
+            z-index: 1000 !important;
+        }
+
+        footer {
+            background-color: #174d88;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        footer {
+            background-color: #174d88;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .social-media {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        footer a, .social-media a {
+            color: white;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+        footer a:hover, .social-media a:hover {
+            text-decoration: underline;
+            color: black;
+        }
+
+        .social-media i {
+            color: white;
+        }
+
+        .social-media i:hover {
+            color: black;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 1);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+<div id="loading-screen" class="loading-screen">
+    <p style="font-size: 18px;"><i class="fa-solid fa-spinner fa-spin"></i></p>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+            var userAgent = navigator.userAgent.toLowerCase();
+
+            if (userAgent.match(/android|webos|iphone|ipad|ipod|blackberry|windows phone/i)) {
+                alert("Diese Webseite ist aufgrund von technischen Limitationen nicht für mobile Endgeräte optimiert. Bitte nutzen Sie für die vollständig funktionale Webseite ihren Rechner.");
+            }
+        })
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+            var loadingScreen = document.getElementById("loading-screen");
+            loadingScreen.style.display = "none";
+        }, 1000);
+    });
+
+</script>
+<div class="header">
+    <img src="{{ base_url }}/logo_90.png" alt="Logo">
+    <div class="nav-container">
+        <input type="text" id="citySearch" placeholder="Stadt suchen...">
+        <a href="{{ base_url }}/karte"><i class="fa-solid fa-map"></i> Karte</a>
+        <a rel="preload" href="{{ base_url }}/ueber"><i class="fa-solid fa-book"></i> Über</a>
+        <a rel="preload" href="{{ base_url }}/datenuebersicht"><i class="fa-solid fa-magnifying-glass-chart"></i>
+            Datenübersicht</a>
+        <a rel="preload" href="{{ base_url }}/konfigurator"><i class="fa-solid fa-chart-column"></i> Konfigurator</a>
+        <a rel="preload" href="{{ base_url }}/tabular"><i class="fa-solid fa-table"></i> Tabelle</a>
+
+    </div>
+</div>
+<div id="mapid"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+<script>
+    var map = L.map('mapid').setView([51.1657, 10.4515], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    var cities =[
+  {
+    "name": "Alt Duvenstedt",
+    "lat": 54.3586037,
+    "lng": 9.6437579,
+    "PAM_Mittelwert": 1.037
+  },
+  {
+    "name": "Bad Segeberg",
+    "lat": 53.9422672,
+    "lng": 10.3137943,
+    "PAM_Mittelwert": 1.163
+  },
+  {
+    "name": "Flensburg",
+    "lat": 54.7833021,
+    "lng": 9.4333264,
+    "PAM_Mittelwert": 1.163
+  },
+  {
+    "name": "Lohne",
+    "lat": 52.665257,
+    "lng": 8.2363523,
+    "PAM_Mittelwert": 1.37
+  },
+  {
+    "name": "Oldenburg",
+    "lat": 53.1389753,
+    "lng": 8.2146017,
+    "PAM_Mittelwert": 1.2
+  },
+  {
+    "name": "Lüneburg",
+    "lat": 53.248706,
+    "lng": 10.407855,
+    "PAM_Mittelwert": 0.97
+  },
+  {
+    "name": "Neustadt am Rübenberge",
+    "lat": 52.5055135,
+    "lng": 9.4635826,
+    "PAM_Mittelwert": 0.993
+  },
+  {
+    "name": "Rostock",
+    "lat": 54.0924445,
+    "lng": 12.1286127,
+    "PAM_Mittelwert": 0.783
+  },
+  {
+    "name": "Schwerin",
+    "lat": 53.6288297,
+    "lng": 11.4148038,
+    "PAM_Mittelwert": 0.837
+  },
+  {
+    "name": "Stralsund",
+    "lat": 54.3096314,
+    "lng": 13.0820846,
+    "PAM_Mittelwert": 0.777
+  },
+  {
+    "name": "Bergen",
+    "lat": 49.7808936,
+    "lng": 7.4176059,
+    "PAM_Mittelwert": 1.5
+  },
+  {
+    "name": "Pasewalk",
+    "lat": 53.5053677,
+    "lng": 13.9889049,
+    "PAM_Mittelwert": 0.887
+  },
+  {
+    "name": "Frankfurt an der Oder",
+    "lat": 52.3412273,
+    "lng": 14.549452,
+    "PAM_Mittelwert": 1.04
+  },
+  {
+    "name": "Fürstenwalde",
+    "lat": 50.76058,
+    "lng": 13.8681537,
+    "PAM_Mittelwert": NaN
+  },
+  {
+    "name": "Potsdam",
+    "lat": 52.4009309,
+    "lng": 13.0591397,
+    "PAM_Mittelwert": 1.18
+  },
+  {
+    "name": "Pritzwalk",
+    "lat": 53.1492896,
+    "lng": 12.1761903,
+    "PAM_Mittelwert": 1.497
+  },
+  {
+    "name": "Lüderitz",
+    "lat": 52.5084647,
+    "lng": 11.7427093,
+    "PAM_Mittelwert": NaN
+  },
+  {
+    "name": "Brandenburg an der Havel",
+    "lat": 52.4108261,
+    "lng": 12.5497933,
+    "PAM_Mittelwert": NaN
+  },
+  {
+    "name": "Neuruppin",
+    "lat": 52.9243859,
+    "lng": 12.8092919,
+    "PAM_Mittelwert": 1.243
+  },
+  {
+    "name": "Borken",
+    "lat": 51.8443183,
+    "lng": 6.8582247,
+    "PAM_Mittelwert": 1.203
+  },
+  {
+    "name": "Hagen",
+    "lat": 51.3582945,
+    "lng": 7.473296,
+    "PAM_Mittelwert": 0.96
+  },
+  {
+    "name": "Gütersloh",
+    "lat": 51.9063997,
+    "lng": 8.3782078,
+    "PAM_Mittelwert": 0.89
+  },
+  {
+    "name": "Horn-Bad Meinberg",
+    "lat": 51.8801277,
+    "lng": 8.9731695,
+    "PAM_Mittelwert": 0.863
+  },
+  {
+    "name": "Drolshagen",
+    "lat": 51.0239917,
+    "lng": 7.7740693,
+    "PAM_Mittelwert": 1.047
+  },
+  {
+    "name": "Halberstadt",
+    "lat": 51.8953514,
+    "lng": 11.0520563,
+    "PAM_Mittelwert": 0.913
+  },
+  {
+    "name": "Hildesheim",
+    "lat": 52.1521636,
+    "lng": 9.9513046,
+    "PAM_Mittelwert": 0.993
+  },
+  {
+    "name": "Northeim",
+    "lat": 51.76438235,
+    "lng": 9.858328873964005,
+    "PAM_Mittelwert": 1.28
+  },
+  {
+    "name": "Magdeburg",
+    "lat": 52.1315889,
+    "lng": 11.6399609,
+    "PAM_Mittelwert": 0.813
+  },
+  {
+    "name": "Bergisch-Gladbach",
+    "lat": 50.9929303,
+    "lng": 7.1277379,
+    "PAM_Mittelwert": 1.047
+  },
+  {
+    "name": "Düren",
+    "lat": 50.8031684,
+    "lng": 6.4820806,
+    "PAM_Mittelwert": 1.04
+  },
+  {
+    "name": "Troisdorf",
+    "lat": 50.8153071,
+    "lng": 7.1593271,
+    "PAM_Mittelwert": 1.017
+  },
+  {
+    "name": "Krefeld",
+    "lat": 51.3331205,
+    "lng": 6.5623343,
+    "PAM_Mittelwert": 0.993
+  },
+  {
+    "name": "Mönchengladbach",
+    "lat": 51.1947131,
+    "lng": 6.4353792,
+    "PAM_Mittelwert": 1.11
+  },
+  {
+    "name": "Montabaur",
+    "lat": 50.4362219,
+    "lng": 7.8302494,
+    "PAM_Mittelwert": 0.917
+  },
+  {
+    "name": "Schweich",
+    "lat": 49.8224303,
+    "lng": 6.7515418,
+    "PAM_Mittelwert": 1.08
+  },
+  {
+    "name": "Wittlich",
+    "lat": 49.9850353,
+    "lng": 6.88844,
+    "PAM_Mittelwert": 0.733
+  },
+  {
+    "name": "Altenkirchen",
+    "lat": 50.6880109,
+    "lng": 7.6477412,
+    "PAM_Mittelwert": 0.877
+  },
+  {
+    "name": "Heidelberg",
+    "lat": 49.4093582,
+    "lng": 8.694724,
+    "PAM_Mittelwert": 0.99
+  },
+  {
+    "name": "Kaiserslautern",
+    "lat": 49.4432174,
+    "lng": 7.7689951,
+    "PAM_Mittelwert": 0.833
+  },
+  {
+    "name": "Erbach",
+    "lat": 48.3274603,
+    "lng": 9.8913803,
+    "PAM_Mittelwert": 1.5
+  },
+  {
+    "name": "Reinheim",
+    "lat": 49.8364879,
+    "lng": 8.8238238,
+    "PAM_Mittelwert": 1.05
+  },
+  {
+    "name": "Kirkel",
+    "lat": 49.2833031,
+    "lng": 7.2333295,
+    "PAM_Mittelwert": 0.85
+  },
+  {
+    "name": "Merzig",
+    "lat": 49.4427023,
+    "lng": 6.6374902,
+    "PAM_Mittelwert": 1.347
+  },
+  {
+    "name": "Mainz",
+    "lat": 50.0012314,
+    "lng": 8.2762513,
+    "PAM_Mittelwert": 0.937
+  },
+  {
+    "name": "Heilbronn",
+    "lat": 49.142291,
+    "lng": 9.218655,
+    "PAM_Mittelwert": 1.01
+  },
+  {
+    "name": "Frankfurt am Main",
+    "lat": 50.1106444,
+    "lng": 8.6820917,
+    "PAM_Mittelwert": 1.177
+  },
+  {
+    "name": "Kleve",
+    "lat": 51.7854839,
+    "lng": 6.131367415330141,
+    "PAM_Mittelwert": 0.833
+  },
+  {
+    "name": "Homberg",
+    "lat": 50.6407001,
+    "lng": 8.1058112,
+    "PAM_Mittelwert": 1.05
+  },
+  {
+    "name": "Kassel",
+    "lat": 51.3154546,
+    "lng": 9.4924096,
+    "PAM_Mittelwert": 0.887
+  },
+  {
+    "name": "Bad Nauheim",
+    "lat": 50.376802999999995,
+    "lng": 8.7476036068774,
+    "PAM_Mittelwert": 1.157
+  },
+  {
+    "name": "Büdingen",
+    "lat": 50.2972353,
+    "lng": 9.0990829,
+    "PAM_Mittelwert": 1.153
+  },
+  {
+    "name": "Gießen",
+    "lat": 50.5862066,
+    "lng": 8.6742306,
+    "PAM_Mittelwert": 1.463
+  },
+  {
+    "name": "Ulrichstein",
+    "lat": 50.5759667,
+    "lng": 9.1929639,
+    "PAM_Mittelwert": 1.66
+  },
+  {
+    "name": "Hofbieber",
+    "lat": 50.5932038,
+    "lng": 9.8708724,
+    "PAM_Mittelwert": 0.9
+  },
+  {
+    "name": "Erfurt",
+    "lat": 50.9777974,
+    "lng": 11.0287364,
+    "PAM_Mittelwert": 0.967
+  },
+  {
+    "name": "Heilbad Heiligenstadt",
+    "lat": 51.3756186,
+    "lng": 10.138224,
+    "PAM_Mittelwert": 0.983
+  },
+  {
+    "name": "Sondershausen",
+    "lat": 51.3666041,
+    "lng": 10.8668419,
+    "PAM_Mittelwert": 1.41
+  },
+  {
+    "name": "Gera",
+    "lat": 50.8772301,
+    "lng": 12.0796208,
+    "PAM_Mittelwert": 1.447
+  },
+  {
+    "name": "Halle",
+    "lat": 51.4825041,
+    "lng": 11.9705452,
+    "PAM_Mittelwert": 1.213
+  },
+  {
+    "name": "Dresden",
+    "lat": 51.0493286,
+    "lng": 13.7381437,
+    "PAM_Mittelwert": 1.05
+  },
+  {
+    "name": "Reichenbach",
+    "lat": 50.6219793,
+    "lng": 12.305088373514671,
+    "PAM_Mittelwert": 1.497
+  },
+  {
+    "name": "Dessau",
+    "lat": 51.8309956,
+    "lng": 12.2430723,
+    "PAM_Mittelwert": 1.147
+  },
+  {
+    "name": "Ansbach",
+    "lat": 49.3028611,
+    "lng": 10.5722288,
+    "PAM_Mittelwert": 1.4
+  },
+  {
+    "name": "Bamberg",
+    "lat": 49.8916044,
+    "lng": 10.8868478,
+    "PAM_Mittelwert": 0.987
+  },
+  {
+    "name": "Würzburg",
+    "lat": 49.79245,
+    "lng": 9.932966,
+    "PAM_Mittelwert": 1.197
+  },
+  {
+    "name": "Hirschau",
+    "lat": 49.5445912,
+    "lng": 11.9464314,
+    "PAM_Mittelwert": 1.52
+  },
+  {
+    "name": "Weiden",
+    "lat": 49.8068258,
+    "lng": 7.3007004,
+    "PAM_Mittelwert": 1.437
+  },
+  {
+    "name": "Ingolstadt",
+    "lat": 48.7630165,
+    "lng": 11.4250395,
+    "PAM_Mittelwert": 1.427
+  },
+  {
+    "name": "Regensburg",
+    "lat": 49.0195333,
+    "lng": 12.0974869,
+    "PAM_Mittelwert": 1.233
+  },
+  {
+    "name": "München",
+    "lat": 48.1371079,
+    "lng": 11.5753822,
+    "PAM_Mittelwert": 1.31
+  },
+  {
+    "name": "Passau",
+    "lat": 48.5748229,
+    "lng": 13.4609744,
+    "PAM_Mittelwert": 1.223
+  },
+  {
+    "name": "Trostberg",
+    "lat": 48.0321101,
+    "lng": 12.5654359,
+    "PAM_Mittelwert": 1.113
+  },
+  {
+    "name": "Farchant",
+    "lat": 47.5306769,
+    "lng": 11.1127989,
+    "PAM_Mittelwert": 1.223
+  },
+  {
+    "name": "Augsburg",
+    "lat": 48.3668041,
+    "lng": 10.8986971,
+    "PAM_Mittelwert": 1.215
+  },
+  {
+    "name": "Calw",
+    "lat": 48.7112108,
+    "lng": 8.7452043,
+    "PAM_Mittelwert": 1.017
+  },
+  {
+    "name": "Kaufbeuren",
+    "lat": 47.8803788,
+    "lng": 10.622246,
+    "PAM_Mittelwert": 1.147
+  },
+  {
+    "name": "Ulm",
+    "lat": 48.3974003,
+    "lng": 9.9934336,
+    "PAM_Mittelwert": 1.327
+  },
+  {
+    "name": "Balingen",
+    "lat": 48.2737512,
+    "lng": 8.8557862,
+    "PAM_Mittelwert": 1.22
+  },
+  {
+    "name": "Rudersberg",
+    "lat": 48.8831782,
+    "lng": 9.528413,
+    "PAM_Mittelwert": 1.2
+  },
+  {
+    "name": "Blindheim",
+    "lat": 48.631766,
+    "lng": 10.6185962,
+    "PAM_Mittelwert": 1.513
+  },
+  {
+    "name": "Waldshut",
+    "lat": 47.672925,
+    "lng": 8.2204166,
+    "PAM_Mittelwert": 0.827
+  },
+  {
+    "name": "Steinen",
+    "lat": 50.5739599,
+    "lng": 7.8104924,
+    "PAM_Mittelwert": 1.037
+  },
+  {
+    "name": "Bräunlingen",
+    "lat": 47.9300645,
+    "lng": 8.448329,
+    "PAM_Mittelwert": 1.07
+  },
+  {
+    "name": "Ravensburg",
+    "lat": 47.7811014,
+    "lng": 9.612468,
+    "PAM_Mittelwert": 1.133
+  },
+  {
+    "name": "Tuttlingen",
+    "lat": 47.9844315,
+    "lng": 8.8186606,
+    "PAM_Mittelwert": 1.033
+  },
+  {
+    "name": "Ohlsbach",
+    "lat": 48.4316699,
+    "lng": 7.9939024,
+    "PAM_Mittelwert": 1.113
+  }]
+
+
+    new Awesomplete(document.getElementById("citySearch"), {
+        list: cities.map(city => city.name)
+    });
+
+    /* Calculate Color with quartils
+     Median: 1.08
+    Erstes Quartil (Q1): 0.9764999999999999
+    Drittes Quartil (Q3): 1.223
+    */
+    function getColor(value) {
+        if (isNaN(value)) {
+            return 'white'; // Farbe für NaN-Werte
+        }
+
+        var lowerQuarter = 0.977;
+        var upperQuarter = 1.223;
+
+        if (value < lowerQuarter) {
+            return 'yellow';
+        } else if (value > upperQuarter) {
+            return 'red';
+        } else {
+            return 'orange';
+        }
+    }
+
+
+    cities.forEach(city => {
+        L.circle([city.lat, city.lng], {
+            color: 'none',
+            fillColor: getColor(city.PAM_Mittelwert),
+            fillOpacity: 0.65,
+            radius: 10000
+        }).addTo(map).bindPopup(`
+                <h2><a href="{{ base_url }}/data/${city.name}">${city.name}</a></h2>
+                <p><strong>Mittlerer PAM-Wert:</strong> ${city.PAM_Mittelwert}
+            `);
+    });
+
+    function handleCitySearch(searchTerm) {
+        cities.forEach(city => {
+            if (city.name.toLowerCase() === searchTerm) {
+                var circle = L.circle([city.lat, city.lng], {
+                    color: 'none',
+                    fillOpacity: 0.65,
+                    fillColor: getColor(city.PAM_Mittelwert),
+                    radius: 10000
+                }).addTo(map).bindPopup(`
+                <h2><a href="{{ base_url }}/data/${city.name}">${city.name}</a></h2>
+                <p><strong>Mittlerer PAM-Wert:</strong> ${city.PAM_Mittelwert}</p>
+            `);
+                circle.openPopup();
+                map.setView([city.lat, city.lng], 6);
+            }
+        });
+    }
+
+
+    var searchInput = document.getElementById('citySearch');
+
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            handleCitySearch(e.target.value.toLowerCase());
+        }
+    });
+
+    searchInput.addEventListener('awesomplete-selectcomplete', function (e) {
+        handleCitySearch(e.text.value.toLowerCase());
+    });
+
+
+</script>
+<footer>
+    <div class="social-media">
+        <a href="{{ base_url }}/impressum">Impressum</a>
+    </div>
+    <a href="{{ x_url }}" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+    <a href="{{ instagram_url }}" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+    <a href="{{ facebook_url }}" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+</footer>
+
+</body>
+</html>
