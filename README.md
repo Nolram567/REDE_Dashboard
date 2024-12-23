@@ -34,7 +34,7 @@ Rede-Dashboard/
 
 ├── requirements.txt     # Die Abhängigkeiten des Python-Projekts
 
-├──config.ini               # Die Konfigurationsdatei, die die finale URL der Webseite enthalten sollte.
+├── config.ini               # Die Konfigurationsdatei, die die finale URL der Webseite enthalten sollte.
 
 ├── Dockerfile        
 
@@ -44,17 +44,15 @@ Rede-Dashboard/
 
 ├── public/              # In diesem Ordner liegen die HTML-Dateien, die Grafiken, das Favicon. [^2]
 
-│   ├── ...         # Haupt-Server-Datei (oder wie auch immer sie heißt)
-
 ├── scripts/              # Dieser Ordner enthält einige Helferskripte: Einen Performance-Tester und einige Skripte
 
 │   └── ...                       mit denen ich die plotly-Grafiken erzeugt habe.
 
-├── Statistics.py    # Das Skript für die Datenverarbeitung. 
+├── statistics.py    # Das Skript für die Datenverarbeitung. 
 
 ├── server.py        # Der Server.
 
-Einige Eindrücke des UI:
+Einige Eindrücke vom UI:
 
 ![](public/Karte.PNG)
 
